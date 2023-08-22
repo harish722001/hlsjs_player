@@ -1,0 +1,1084 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <title>Player</title>
+    <style>
+        video {
+            width: 530px;
+            height: 300px;
+        }
+        
+        #trace {
+            height: 300px;
+            margin-top: 10px;
+            font-size: 10px;
+        }
+        
+        #videotrace {
+            height: 300px;
+            margin-top: 10px;
+            /* font-size: 10px; */
+        }
+        
+        #audiotrace {
+            height: 300px;
+            margin-top: 10px;
+            /* font-size: 10px; */
+        }
+        
+        #eventLogsTrace {
+            height: 300px;
+            margin-top: 30px;
+            /* font-size: 10px; */
+        }
+        
+        .Mydiv {
+            display: flex;
+            flex-direction: row;
+            
+        }
+        
+        .parametersDiv{
+            box-sizing: border-box;
+            -moz-box-sizing: border-box;
+            -webkit-box-sizing: border-box;
+            width: 400px;
+            height: 280px;
+            border: 1.3px solid #969696;
+            /* margin-left: 10px; */
+            /* margin-top: 20px; */
+            /* padding: 10px; */
+        }
+        .tab {
+            overflow: hidden;
+            border: 1px solid #ccc;
+            background-color: #f1f1f1;
+        }
+        .tablink {
+            background-color: whitesmoke;
+            color: black;
+            float: left;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 16px;
+            font-size: 17px;
+            width: 25%;
+        }
+        
+        .tablink:hover {
+            background-color: lightgray;
+        }
+        
+        /* Style the tab content */
+        .tabcontent {
+            color: black;
+            display: none;
+            padding-top: 30px;
+            padding-left: 30px;
+            margin-top: 30px;
+            /* text-align: center; */
+        }
+        
+        .buttonContainer{
+            display: flex;
+            flex-direction: row;
+            margin-top: 45px;
+        }
+        
+        #Video {background-color:white;}
+        #Audio {background-color:white;}
+        
+    </style>
+</head>
+<body>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+        <button onclick="hlsPlayer()">hls load</button>
+        
+        <video id="hlsvideo" controls="true"></video>
+        <div class="col-sm-6">
+            <div class="form-floating">
+                <textarea class="form-control" placeholder="Sent CMCD data will be displayed here"
+                id="trace" style="width: 400px;"></textarea>
+            </div>
+        </div>
+        <!-- <script src="./node_modules/file-saver/src/FileSaver.js"></script> -->
+        <script>
+            function hlsPlayer() {
+                // var blob = new Blob(["Hello, world!"], {type: "text/plain;charset=utf-8"});
+                // saveAs(blob, "hello world.txt");
+                var config = {
+                    cmcd:true,
+                    contentId:"74gfrbjiojkn",
+                    useHeaders:true,
+                };
+                var video = document.getElementById('hlsvideo');
+                var videoSrc = 'https://tfmstest2.blob.core.windows.net/output/POC/POC_story4/VIKRAM/output16/cmaf_avc_fairplay/index-mid.m3u8';
+                if (Hls.isSupported()) {
+                    // console.log("isSupported",Hls.isSupported());
+                    var hls = new Hls(config);
+                    // console.log("hls..",hls);
+                    hls.loadSource(videoSrc);
+                    hls.attachMedia(video);
+                    hls.on(Hls.Events.MANIFEST_LOADING,onManifestLoading)
+                    hls.on(Hls.Events.LEVEL_LOADED, onLevelLoaded);
+                    hls.on(Hls.Events.MANIFEST_PARSED, function (event,data) {
+                        console.log("levels",event,data);
+                        
+                        console.log('MANIFEST_PARSED----',event,data,data.levels,data.levels[0].attrs.BANDWIDTH);
+                        var levels = data.levels;
+                        console.log(levels);
+                        levels.map((level) => {
+                            console.log("level",level);
+                        })
+                        var noOfLevels = data.levels.length;
+                        console.log("noOfLevels",data.levels,noOfLevels);
+                        for (let i = 0; i < noOfLevels; i++) {
+                            console.log("for",i,noOfLevels);
+                            const element = data.levels[i];
+                            console.log(element);
+                        }
+                        
+                        
+                    });
+                    hls.on(Hls.Events.MEDIA_ATTACHING, function (event,data) {
+                        console.log('MEDIA_ATTACHING----',event,data);
+                    });
+                    hls.on(Hls.Events.MEDIA_ATTACHED, function (event,data) {
+                        console.log('MEDIA_ATTACHED----',data,data.media);
+                    });
+                    hls.on(Hls.Events.BUFFER_RESET, function (event,data) {
+                        console.log('BUFFER_RESET----');
+                    });
+                    
+                    //initial loading
+                    hls.on(Hls.Events.BUFFER_CODECS, function (event,data) {
+                        console.log('BUFFER_CODECS----',data);
+                    });
+                    hls.on(Hls.Events.BUFFER_CREATED, function (event,data) {
+                        console.log('BUFFER_CREATED----');
+                    });
+                    
+                    hls.on(Hls.Events.ERROR, function (event,data) {
+                        console.log('ERROR----');
+                    });
+                    
+                    hls.on(Hls.Events.FRAG_LOAD_ERROR, function (event,data) {
+                        console.log('FRAG_LOAD_ERROR----');
+                    });
+                    
+                    // hls.on(Hls.ErrorDetails.BUFFER_STALLED_ERROR, function (event,data) {
+                        //     console.log('BUFFER_STALLED_ERROR----');
+                        // });
+                        
+                        //while loading
+                        hls.on(Hls.Events.BUFFER_APPENDING, function (event,data) {
+                            console.log('BUFFER_APPENDING----',data);
+                        });
+                        hls.on(Hls.Events.BUFFER_APPENDED, function (event,data) {
+                            console.log('BUFFER_APPENDED----',data);
+                        });
+                        
+                        //stream is getting finished
+                        hls.on(Hls.Events.BUFFER_EOS, function (event,data) {
+                            console.log('BUFFER_EOS----',data);
+                        });
+                        
+                        //called in initial loading and later internet disconnected
+                        hls.on(Hls.Events.LEVEL_SWITCHING, function (event,data) {
+                            console.log('LEVEL_SWITCHING----',event,"level:",data.level,"bitrate:",data.bitrate);
+                        });
+                        hls.on(Hls.Events.LEVEL_SWITCHED, function (event,data) {
+                            console.log('LEVEL_SWITCHED----',event,"level:",data.level);
+                        });
+                        
+                        hls.on(Hls.Events.FRAG_LOADING, function (event,data) {
+                            console.log('FRAG_LOADING----',event,data);
+                        });
+                        
+                        hls.on(Hls.Events.STREAM_STATE_TRANSITION, function (event,data) {
+                            console.log('STREAM_STATE_TRANSITION----',event,data);
+                        });
+                        hls.on(Hls.Events.FRAG_LOADED, onFragLoaded);
+                        hls.on(Hls.ErrorDetails.BUFFER_STALLED_ERROR,function(event,data){
+                            console.log('BUFFER_STALLED_ERROR----',event,data);
+                            
+                        })
+                        
+                        //   const media = hls.me;
+                        // console.log("video length media ",hls,hls.media.url);
+                        var mediaObject = {};
+                        mediaObject = hls.bufferController.mediaSource;
+                        console.log("mediaObject----",mediaObject.duration);
+                        console.log("video length ",hls,hls.bufferController.mediaSource,typeof parseFloat(hls.bufferController.mediaSource.duration),hls.bufferController.mediaSource.duration);
+                    }
+                    else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                        video.src = videoSrc;
+                    }
+                }
+                function onManifestLoading(event,data){
+                    console.log("MANIFEST_LOADING----",event,data);
+                }
+                function onLevelLoaded(event, data) {
+                    
+                    if(data.level === 4){
+                        console.log("LEVEL_LOADED----",event,data,"level",data.level);  
+                        // console.log("Hls requestUrl  ", data.networkDetails.responseURL);    
+                        var url =      data.networkDetails.responseURL;
+                        var decodedUrl =decodeURIComponent(url);
+                        console.log("decodedUrl",decodedUrl);
+                        var splitData = decodedUrl.slice(82);
+                        console.log("splitData",splitData);
+                        // extractHlsKeyValuePairs(splitData);
+                        var keyValuePairs = splitData.split(',');
+                        console.log("keyValuePairs",keyValuePairs);
+                        var data = getKeysHls(splitData);
+                        console.log("extracted-------",data);
+                        var hlskeys = Object.keys(data);
+                        // console.log(hlskeys);
+                        keys = hlskeys.sort();
+                        for (var key of keys) {
+                            log(key.padEnd(4) + ': ' + data[key]);
+                        }
+                        log('');
+                        
+                        
+                    }
+                }
+                
+                function getKeysHls(splitData){
+                    var cmcdHlsData = {};
+                    var cmcdHlsString = splitData;
+                    // console.log("cmcdString",cmcdString)
+                    extractHlsKeyValuePairs(cmcdHlsString, cmcdHlsData);
+                    return cmcdHlsData;
+                }
+                
+                function extractHlsKeyValuePairs(cmcdHlsString, cmcdHlsData) {
+                    if (cmcdHlsString === '') {
+                        return;
+                    }
+                    var keyValuePairs = cmcdHlsString.split(',');
+                    
+                    keyValuePairs.forEach(function (keyValuePair) {
+                        var data = keyValuePair.split('=');
+                        var key = data[0];
+                        var value = data[1];
+                        
+                        cmcdHlsData[key] = value;
+                    })
+                    
+                }
+                
+                // function log(msg) {
+                    //     console.log("msg",msg);
+                    //     msg = msg.length > 200 ? msg.substring(0, 200) + '...' : msg; /* to avoid repeated wrapping with large objects */
+                    //     var tracePanel = document.getElementById('trace');
+                    //     console.log("tracePanel",tracePanel);
+                    //     tracePanel.innerHTML += msg + '\n';
+                    //     tracePanel.scrollTop = tracePanel.scrollHeight;
+                    //     // console.log(msg);
+                    // }
+                    
+                    //Loading for every 10 start
+                    function onFragLoaded(event, data) {
+                        console.log("FRAG_LOADED----",event,data);  
+                        // console.log("LEVEL_LOADED----",event,data);  
+                        // console.log("FRAG_LOADED Hls requestUrl  ", data.networkDetails.responseURL);    
+                        var url =      data.networkDetails.responseURL;
+                        var decodedUrl =decodeURIComponent(url);
+                        // console.log("decodedUrl",decodedUrl);
+                        // var splitData = decodedUrl.slice(88);
+                        var splitData = decodedUrl.slice(decodedUrl.indexOf('b'),decodedUrl.length - 1);
+                        
+                        // console.log("splitData",splitData);
+                        // extractHlsKeyValuePairs(splitData);
+                        var keyValuePairs = splitData.split(',');
+                        // console.log("keyValuePairs",keyValuePairs);
+                        var data = getKeysHls(splitData);
+                        // console.log("extracted-------",data);
+                        var hlskeys = Object.keys(data);
+                        // console.log(hlskeys);
+                        keys = hlskeys.sort();
+                        for (var key of keys) {
+                            log(key.padEnd(4) + ': ' + data[key]);
+                        }
+                        log('');
+                    }
+                </script>
+                <script src="./dash.all.debug.js"></script>
+                <link href="./main.css" rel="stylesheet">
+                <!-- DROPDOWN SCRIPT TO SELECT PLAYER -->
+                <!-- <script>
+                    let value = "Dash";
+                    function updateValue(value) {
+                    }
+                </script> -->
+<!--                 <script src="./node_modules/file-saver/src/FileSaver.js"></script> -->
+                
+                <!-- <script class="code">
+                    var CMCD_DATA_GENERATED = dashjs.MetricsReporting.events.CMCD_DATA_GENERATED;
+                    
+                    // console.log("CMCD_DATA_GENERATED",dashjs);
+                    /* possible modes of attach cmcd data */
+                    var CMCD_MODE_QUERY = 'query'; /* as query parameters */
+                    var CMCD_MODE_HEADER = 'header'; /* as HTTP headers */
+                    var metricsTimer,currentStreamInfo,videoPendingIndex,videoPendingMaxIndex,indexDownloading,videoIndex,audioPendingIndex,audioPendingMaxIndex,audioIndex;
+                    var videoParameters = {
+                        videoParametersData:[]
+                    };
+                    var msgCount=0;
+                    var videoLength;
+                    var sessionId,contentId;
+                    function init() {
+                        const videoElement = document.querySelector("video");
+                        videoElement.addEventListener("play", (event) => {
+                            alert("hi");
+  console.log(
+    "The Boolean paused property is now 'false'. Either the play() method was called or the autoplay attribute was toggled."
+  );
+});
+                        var inputUrl = document.getElementById("userInputUrl").value;
+                        let sessionId = document.getElementById("sid").value;
+                        let contentId = document.getElementById("cid").value; 
+                        var video,
+                        url = inputUrl,
+                        version;
+                        player = dashjs.MediaPlayer().create();
+                        video = document.querySelector('video');
+                        player.initialize();
+                        version = player.getVersion();
+                        console.log("dash js--",dashjs);
+                        player.updateSettings({
+                            streaming: {
+                                cmcd: {
+                                    enabled: true, /* enable reporting of cmcd parameters */
+                                    sid: sessionId, /* session id send with each request */
+                                    cid: contentId, /* content id send with each request */
+                                    mode: CMCD_MODE_QUERY,
+                                    enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v']
+                                },
+                                abr:{
+                                    fetchThroughputCalculationMode: 'abrFetchThroughputCalculationMoofParsing'
+                                }
+                            }
+                        });
+                        player.on(CMCD_DATA_GENERATED, handleCmcdDataGeneratedEvent);
+                        
+                        player.setAutoPlay(false);
+                        player.attachView(video);
+                        player.attachSource(url);
+                        
+                        player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED,function (event) {
+                            console.log("STREAM_INITIALIZED","Video Length",event,event.streamInfo.duration + " secs");
+                            var videoLength = event.streamInfo.duration;
+                            console.log("VIDEO lENGTH",event.streamInfo.duration,videoLength);
+                            
+                            let currentDate = new Date();
+                            let time = currentDate.getHours() + ":" + currentDate.getMinutes() + ":" + currentDate.getSeconds();
+                            // console.log(time);
+                            var stream_initialized = ['ts','sid','cid','en','vl'];
+                            var stream_initialized_obj = {'ts':time,'sid':sessionId,'cid':contentId,'en':'stream_initialized','vl':videoLength}
+                            for (var key of stream_initialized) {
+                                eventLogTrace(key.padEnd(2) + ': ' + stream_initialized_obj[key]);
+                            }
+                            eventLogTrace('\n');
+                            // stopMetricsInterval();
+                            
+                            metricsTimer = setInterval(function () {
+                                updateMetrics();                                
+                            }, 1000);
+                            // after 3 mins stop
+                            // setTimeout(() => {
+                            //     clearInterval(metricsTimer);
+                            //     console.log('stop');
+                            // }, 180000);
+                            // updateMetrics();
+                            
+                            // var name = "metrics data";
+                            
+                            // var metricsData  = document.getElementById('Video').innerHTML;
+                            // console.log("metricsData",metricsData);
+                            // var blob = new Blob([metricsData], {type: "text/plain;charset=utf-8"});
+                            // saveAs(blob, "metrics.txt");
+                        })
+                        
+                        
+                        
+                        player.on(dashjs.MediaPlayer.events.PLAYBACK_STARTED, function (e) { /* jshint ignore:line */
+                            console.log("PLAYBACK_STARTED","playback start time",e,e.startTime);
+                            var playbackStartTime = e.startTime;
+                            let currentDate = new Date();
+                            let time = currentDate.getHours() + ":" + currentDate.getMinutes() + ":" + currentDate.getSeconds();
+                            // console.log(time);
+                            var playback_started = ['ts','en','pst'];
+                            var playback_started_obj = {'ts':time,'en':'playback_started','pst':playbackStartTime}
+                            for (var key of playback_started) {
+                                eventLogTrace(key.padEnd(2) + ': ' + playback_started_obj[key]);
+                            }
+                            eventLogTrace('\n');
+                        });
+                        
+                        //Called when media type switches to audio/video
+                        player.on(dashjs.MediaPlayer.events.BUFFER_LEVEL_STATE_CHANGED, function (e) { /* jshint ignore:line */
+                            console.log("BUFFER_LEVEL_STATE_CHANGED",e);
+                        });
+                        
+                        //Buffer level increases for both audio and video until loading occurs
+                        player.on(dashjs.MediaPlayer.events.BUFFER_LEVEL_UPDATED, function (e) { /* jshint ignore:line */
+                            console.log("BUFFER_LEVEL_UPDATED","mediatype",e.mediaType,"bufferLevel",e.bufferLevel);
+                           
+                        });
+                        
+                        player.on(dashjs.MediaPlayer.events.BUFFER_LOADED, function (e) { /* jshint ignore:line */
+                            console.log("BUFFER_LOADED",e);
+                        });
+                        
+                        player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED, function (e) { /* jshint ignore:line */
+                            console.log("QUALITY_CHANGE_RENDERED",e);
+                        });
+                        
+                        player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_REQUESTED, function (e) { /* jshint ignore:line */
+                            console.log("QUALITY_CHANGE_REQUESTED",e,"WIDTH",e.bitrateInfo.width,"HEIGHT",e.bitrateInfo.height,"newQuality",e.newQuality,"bitrate",e.bitrateInfo.bitrate);
+                            var oldQuality = e.oldQuality;
+                            var newQuality = e.newQuality;
+                            var bitrate = e.bitrateInfo.bitrate;
+                            var mediaType = e.mediaType;
+                            var width = e.bitrateInfo.width;
+                            var height = e.bitrateInfo.height;
+                            let currentDate = new Date();
+                            let time = currentDate.getHours() + ":" + currentDate.getMinutes() + ":" + currentDate.getSeconds();
+                            // console.log(time);
+                            var quality_change_requested = ['ts','t','en','oq','nq','br','w','h'];
+                            var quality_change_requested_obj = {'ts':time,'t':mediaType,'en':'quality_change_requested','oq':oldQuality,'nq':newQuality,'br':bitrate,'w':width,'h':height}
+                            for (var key of quality_change_requested) {
+                                eventLogTrace(key.padEnd(2) + ': ' + quality_change_requested_obj[key]);
+                            }
+                            eventLogTrace('\n');
+                        });
+                        
+                        player.on(dashjs.MediaPlayer.events.PERIOD_SWITCH_COMPLETED, function (e) {
+                            currentStreamInfo = e.toStreamInfo;
+                        });
+                        
+                        player.on(dashjs.MediaPlayer.events.REPRESENTATION_SWITCH, function (e) {
+                            // var bitrate = Math.round(e.currentRepresentation.bandwidth / 1000);
+                            
+                            //-------VIDEO INDEX DOWNLOADING---------
+                            videoPendingIndex = e.currentRepresentation.index + 1;
+                            document.getElementById('videoPendingIndex').textContent = videoPendingIndex;
+                            
+                            videoPendingMaxIndex = e.numberOfRepresentations;
+                            document.getElementById('videoPendingMaxIndex').textContent = videoPendingMaxIndex;
+                            
+                            indexDownloading = videoPendingIndex + "/" + videoPendingMaxIndex;
+                            //-------AUDIO INDEX DOWNLOADING---------
+                            audioPendingIndex = e.currentRepresentation.index + 1;
+                            document.getElementById('audioPendingIndex').textContent = audioPendingIndex;
+                            
+                            audioPendingMaxIndex = e.numberOfRepresentations;
+                            document.getElementById('audioPendingMaxIndex').textContent = audioPendingMaxIndex;
+                            
+                            player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED, function (e) { /* jshint ignore:line */
+                                //----------VIDEO INDEX PLAYING--------
+                                
+                                videoIndex = e.newQuality + 1;
+                                document.getElementById('videoIndex').textContent = videoIndex;
+                                //----------AUDIO INDEX PLAYING--------
+                                
+                                audioIndex = e.newQuality + 1;
+                                document.getElementById('audioIndex').textContent = audioIndex;
+                            });
+                        });
+                        
+                        player.on(dashjs.MediaPlayer.events.ERROR, function (e) { 
+                            console.log("ERROR",e);
+                        }); 
+
+                        player.on(dashjs.MediaPlayer.events.EVENT_MODE_ON_RECEIVE, function (e) { 
+                            console.log("EVENT_MODE_ON_RECEIVE",e);
+                        }); 
+
+                        player.on(dashjs.MediaPlayer.events.EVENT_MODE_ON_START, function (e) { 
+                            console.log("EVENT_MODE_ON_START",e);
+                        }); 
+
+                        player.on(dashjs.MediaPlayer.events.PLAYBACK_ENDED, function (e,data) { 
+                            console.log("PLAYBACK_ENDED",e,data);
+                        }); 
+
+                        player.on(dashjs.MediaPlayer.events.PLAYBACK_ERROR, function (e) { 
+                            console.log("PLAYBACK_ERROR",e);
+                        }); 
+
+                        player.on(dashjs.MediaPlayer.events.PLAYBACK_NOT_ALLOWED, function (e) { 
+                            console.log("PLAYBACK_NOT_ALLOWED",e);
+                        }); 
+
+                        player.on(dashjs.MediaPlayer.events.PLAYBACK_PAUSED, function (e,data) { 
+                            console.log("PLAYBACK_PAUSED",e,data);
+                        }); 
+
+                        player.on(dashjs.MediaPlayer.events.PLAYBACK_RATE_CHANGED, function (e) { 
+                            console.log("PLAYBACK_RATE_CHANGED",e);
+                        }); 
+
+                        player.on(dashjs.MediaPlayer.events.PLAYBACK_SEEKED, function (e,data) { 
+                            console.log("PLAYBACK_SEEKED",e,data);
+                        }); 
+
+                        player.on(dashjs.MediaPlayer.events.PLAYBACK_STALLED, function (e) { 
+                            console.log("PLAYBACK_STALLED",e);
+                        }); 
+
+                        player.on(dashjs.MediaPlayer.events.PLAYBACK_PLAYING, function (e) { 
+                            console.log("PLAYBACK_PLAYING",e);
+                        }); 
+
+                        player.on(dashjs.MediaPlayer.events.PLAYBACK_PROGRESS, function (e) { 
+                            console.log("PLAYBACK_PROGRESS",e);
+                        }); 
+
+                        player.on(dashjs.MediaPlayer.events.BUFFER_EMPTY, function (e) { 
+                            console.log("BUFFER_EMPTY",e);
+                        }); 
+
+                        player.on(dashjs.MediaPlayer.events.LOG, function (e) { 
+                            console.log("LOG",e);
+                        });
+
+                        player.on(dashjs.MediaPlayer.events.PLAYBACK_METADATA_LOADED, function (e) { 
+                            console.log("PLAYBACK_METADATA_LOADED",e);
+                        });
+
+                        player.on(dashjs.MediaPlayer.events.DYNAMIC_TO_STATIC, function (e) { 
+                            console.log("DYNAMIC_TO_STATIC",e);
+                        });
+
+                        player.on(dashjs.MediaPlayer.events.MANIFEST_LOADED, function (e) { 
+                            console.log("MANIFEST_LOADED",e,e.data,e.data.type);
+                            var videoType = e.data.type;
+                            var protocol = e.data.protocol;
+                            let currentDate = new Date();
+                            let time = currentDate.getHours() + ":" + currentDate.getMinutes() + ":" + currentDate.getSeconds();
+                            // console.log(time);
+                            var manifest_loaded = ['ts','en','vt','p'];
+                            var manifest_loaded_obj = {'ts':time,'en':'manifest_loaded','vt':videoType,'p':protocol}
+                            for (var key of manifest_loaded) {
+                                eventLogTrace(key.padEnd(2) + ': ' + manifest_loaded_obj[key]);
+                            }
+                            eventLogTrace('\n');
+                        });
+                    }
+                    
+                    function updateMetrics(type){
+                        var dashMetrics = player.getDashMetrics();
+                        var dashAdapter = player.getDashAdapter();
+                        // console.log("dashMetrics--",dashMetrics);
+                        
+                        //--------VIDEO BUFFER LENGTH----------
+                        var videoBufferLevel = dashMetrics.getCurrentBufferLevel('video',true);
+                        // console.log("videoBufferLevel--",videoBufferLevel);
+                        document.getElementById('videobufferLength').textContent = videoBufferLevel;
+                        
+                        //--------VIDEO BITRATE DOWNLOADING ---------
+                        var period = dashAdapter.getPeriodById(currentStreamInfo.id);
+                        var periodIdx = period ? period.index : currentStreamInfo.index;
+                        var repSwitch = dashMetrics.getCurrentRepresentationSwitch('video', true);
+                        var videobitrate = repSwitch ? Math.round(dashAdapter.getBandwidthForRepresentation(repSwitch.to, periodIdx) / 1000) : NaN;
+                        // console.log("bitrate--",bitrate);
+                        document.getElementById('videoBitrate').textContent = videobitrate;
+                        
+                        //---------VIDEO INDEX PLAYING-----------------
+                        var videomaxIndex = dashAdapter.getMaxIndexForBufferType('video', periodIdx);
+                        document.getElementById('videoMaxIndex').textContent = videomaxIndex;
+                        var indexPlaying = videoIndex + "/" + videomaxIndex;
+                        //---------AUDIO INDEX PLAYING-----------------
+                        var audiomaxIndex = dashAdapter.getMaxIndexForBufferType('audio', periodIdx);
+                        document.getElementById('audioMaxIndex').textContent = audiomaxIndex;
+                        
+                        // var liveLatency = player.getCurrentLiveLatency();
+                        // console.log("liveLatency--",liveLatency);
+                        
+                        //----------VIDEO DROPPED FRAMES METRICS------------
+                        var droppedFramesMetrics = dashMetrics.getCurrentDroppedFrames();
+                        // console.log("droppedFramesMetrics--",droppedFramesMetrics);
+                        var droppedFPS = droppedFramesMetrics ? droppedFramesMetrics.droppedFrames : 0;
+                        document.getElementById('videodroppedFrames').textContent = droppedFPS;
+                        document.getElementById('audiodroppedFrames').textContent = droppedFPS;
+                        
+                        //---------VIDEO LATENCY, DOWNLOAD, RATIO---------------
+                        var httpMetrics = calculateHTTPMetrics('video', dashMetrics.getHttpRequests('video'));
+                        if (httpMetrics) {
+                            var    videoDownload = httpMetrics.download['video'].low.toFixed(2) + ' | ' + httpMetrics.download['video'].average.toFixed(2) + ' | ' + httpMetrics.download['video'].high.toFixed(2);
+                            document.getElementById('videodownload').textContent = videoDownload;
+                            
+                            var   videoLatency = httpMetrics.latency['video'].low.toFixed(2) + ' | ' + httpMetrics.latency['video'].average.toFixed(2) + ' | ' + httpMetrics.latency['video'].high.toFixed(2);
+                            // console.log("videoLatency",videoLatency,httpMetrics);
+                            document.getElementById('videolatency').textContent = videoLatency;
+                            
+                            var   videoRatio = httpMetrics.ratio['video'].low.toFixed(2) + ' | ' + httpMetrics.ratio['video'].average.toFixed(2) + ' | ' + httpMetrics.ratio['video'].high.toFixed(2);
+                            document.getElementById('videoratio').textContent = videoRatio;
+                            
+                        }
+                        // console.log("videoDownload",videoDownload,videoLatency,videoRatio);
+                        
+                        //---------AUDIO LATENCY, DOWNLOAD, RATIO---------------
+                        var audiohttpMetrics = calculateHTTPMetrics('audio', dashMetrics.getHttpRequests('audio'));
+                        // console.log("audiohttpMetrics",audiohttpMetrics);
+                        if (audiohttpMetrics) {
+                            var    audioDownload = audiohttpMetrics.download['audio'].low.toFixed(2) + ' | ' + audiohttpMetrics.download['audio'].average.toFixed(2) + ' | ' + audiohttpMetrics.download['audio'].high.toFixed(2);
+                            document.getElementById('audiodownload').textContent = audioDownload;
+                            
+                            var   audioLatency = audiohttpMetrics.latency['audio'].low.toFixed(2) + ' | ' + audiohttpMetrics.latency['audio'].average.toFixed(2) + ' | ' + audiohttpMetrics.latency['audio'].high.toFixed(2);
+                            // console.log("videoLatency",videoLatency,httpMetrics);
+                            document.getElementById('audiolatency').textContent = audioLatency;
+                            
+                            var   audioRatio = audiohttpMetrics.ratio['audio'].low.toFixed(2) + ' | ' + audiohttpMetrics.ratio['audio'].average.toFixed(2) + ' | ' + audiohttpMetrics.ratio['audio'].high.toFixed(2);
+                            document.getElementById('audioratio').textContent = audioRatio;
+                            
+                        }
+                        // console.log("audioDownload",audioDownload,audioLatency);
+                        
+                        // var liveLatency = 0;
+                        // var playbackRate = 1.00
+                        // if ($scope.isDynamic) {
+                            //     liveLatency = $scope.player.getCurrentLiveLatency();
+                            var   playbackRate = parseFloat(player.getPlaybackRate().toFixed(2));
+                            document.getElementById('playbackrate').textContent = playbackRate;
+                            
+                            // console.log("playbackRate",playbackRate);
+                            // }
+                            
+                            //-------------AUDIO BUFFER LENGTH----------
+                            var audioBufferLevel = dashMetrics.getCurrentBufferLevel('audio',true);
+                            // console.log("audio bufferLevel--",audioBufferLevel);
+                            document.getElementById('audioBufferLength').textContent = audioBufferLevel;
+                            
+                            var repSwitch = dashMetrics.getCurrentRepresentationSwitch('audio', true);
+                            var audiobitrate = repSwitch ? Math.round(dashAdapter.getBandwidthForRepresentation(repSwitch.to, periodIdx) / 1000) : NaN;
+                            // console.log("bitrate--",bitrate);
+                            document.getElementById('audioBitrate').textContent = audiobitrate;
+                            let currentDate = new Date();
+                            let time = currentDate.getHours() + ":" + currentDate.getMinutes() + ":" + currentDate.getSeconds();
+                            console.log(time);
+                            var videoParameters = ['ts','sid','cid','t','bl','bd','vpi','vpmi','vi','vmi','df','l','d','r'];
+                            var videoParametersObj = {"ts":time,'sid':sessionId,'cid':contentId,'t':"v","bl":videoBufferLevel,"bd":videobitrate,"vpi":videoPendingIndex,'vpmi':videoPendingMaxIndex,"vi":videoIndex,"vmi":videomaxIndex,"df":droppedFPS,"l":videoLatency,"d":videoDownload,"r":videoRatio};
+                            console.log("videoParametersObj",videoParametersObj);
+                            // videoParameters.videoParametersData.push(videoParametersObj);
+                            // console.log("videoParameters",videoParameters);
+                            // var keys = Object.keys(data);
+                            // console.log("keysssssssss",keys,event,event.cmcdData[key]);
+                            // keys = keys.sort();
+                            for (var key of videoParameters) {
+                                logVideo(key.padEnd(2) + ': ' + videoParametersObj[key]);
+                            }
+                            logVideo('\n');
+                            var audioParameters = ['ts','sid','cid','t','bl','bd','api','apmi','ai','ami','df','l','d','r','pr'];
+                            var audioParametersObj = {"ts":time,'sid':sessionId,'cid':contentId,'t':"a","bl":audioBufferLevel,"bd":audiobitrate,"api":audioPendingIndex,'apmi':audioPendingMaxIndex,"ai":audioIndex,"ami":audiomaxIndex,"df":droppedFPS,"l":audioLatency,"d":audioDownload,"r":audioRatio,"pr":playbackRate};
+                            for (var key of audioParameters) {
+                                logAudio(key.padEnd(2) + ': ' + audioParametersObj[key]);
+                            }
+                            logAudio('\n');
+                            // var blob = new Blob([JSON.stringify(videoParameters)], {type: "text/plain;charset=utf-8"});
+                            //     saveAs(blob, "videoParameters.json");
+                        }
+                        
+                        function calculateHTTPMetrics(type, requests) {
+                            var latency = {},
+                            download = {},
+                            ratio = {};
+                            
+                            var requestWindow = requests.slice(-20).filter(function (req) {
+                                return req.responsecode >= 200 && req.responsecode < 300 && req.type === 'MediaSegment' && req._stream === type && !!req._mediaduration;
+                            }).slice(-4);
+                            
+                            if (requestWindow.length > 0) {
+                                var latencyTimes = requestWindow.map(function (req) {
+                                    return Math.abs(req.tresponse.getTime() - req.trequest.getTime()) / 1000;
+                                });
+                                
+                                latency[type] = {
+                                    average: latencyTimes.reduce(function (l, r) {
+                                        return l + r;
+                                    }) / latencyTimes.length,
+                                    high: latencyTimes.reduce(function (l, r) {
+                                        return l < r ? r : l;
+                                    }),
+                                    low: latencyTimes.reduce(function (l, r) {
+                                        return l < r ? l : r;
+                                    }),
+                                    count: latencyTimes.length
+                                };
+                                
+                                var downloadTimes = requestWindow.map(function (req) {
+                                    return Math.abs(req._tfinish.getTime() - req.tresponse.getTime()) / 1000;
+                                });
+                                
+                                download[type] = {
+                                    average: downloadTimes.reduce(function (l, r) {
+                                        return l + r;
+                                    }) / downloadTimes.length,
+                                    high: downloadTimes.reduce(function (l, r) {
+                                        return l < r ? r : l;
+                                    }),
+                                    low: downloadTimes.reduce(function (l, r) {
+                                        return l < r ? l : r;
+                                    }),
+                                    count: downloadTimes.length
+                                };
+                                
+                                var durationTimes = requestWindow.map(function (req) {
+                                    return req._mediaduration;
+                                });
+                                
+                                ratio[type] = {
+                                    average: (durationTimes.reduce(function (l, r) {
+                                        return l + r;
+                                    }) / downloadTimes.length) / download[type].average,
+                                    high: durationTimes.reduce(function (l, r) {
+                                        return l < r ? r : l;
+                                    }) / download[type].low,
+                                    low: durationTimes.reduce(function (l, r) {
+                                        return l < r ? l : r;
+                                    }) / download[type].high,
+                                    count: durationTimes.length
+                                };
+                                
+                                return {
+                                    latency: latency,
+                                    download: download,
+                                    ratio: ratio
+                                };
+                                
+                            }
+                            return null;
+                        }
+                        
+                        function stopMetricsInterval() {
+                            if (metricsTimer) {
+                                clearInterval(metricsTimer);
+                                metricsTimer = null;
+                            }
+                        }
+                        
+                        function handleCmcdDataGeneratedEvent(event) {
+                            // console.log("event-----",event);
+                            log('type: ' + event.mediaType);
+                            log('file: ' + event.url.split('/').pop())
+                            var mode = player.getSettings().streaming.cmcd.mode;
+                            var data = mode === CMCD_MODE_HEADER ? getKeysForHeaderMode(event) : getKeysForQueryMode(event);
+                            // console.log("cmcd data",data);
+                            var keys = Object.keys(data);
+                            console.log("keysssssssss",keys,event,event.cmcdData[key],event.cmcdData,event.cmcdData.sid);
+                            sessionId = event.cmcdData.sid;
+                            contentId = event.cmcdData.cid;
+                            keys = keys.sort();
+                            for (var key of keys) {
+                                log(key.padEnd(4) + ': ' + event.cmcdData[key]);
+                            }
+                            log('');
+                        }
+                        
+                        function getKeysForQueryMode(event) {
+                            // console.log("getKeysForQueryMode",event);
+                            
+                            var cmcdData = {};
+                            var cmcdString = event.cmcdString;
+                            // console.log("cmcdString",cmcdString)
+                            extractKeyValuePairs(cmcdString, cmcdData);
+                            
+                            return cmcdData;
+                        }
+                        
+                        function getKeysForHeaderMode(event) {
+                            // console.log("getKeysForHeaderMode",event);
+                            
+                            var cmcdData = {};
+                            var keys = Object.keys(event.headers);
+                            
+                            for (var key of keys) {
+                                extractKeyValuePairs(event.headers[key], cmcdData)
+                            }
+                            
+                            return cmcdData
+                        }
+                        
+                        function extractKeyValuePairs(cmcdString, cmcdData) {
+                            if (cmcdString === '') {
+                                return;
+                            }
+                            var keyValuePairs = cmcdString.split(',');
+                            
+                            keyValuePairs.forEach(function (keyValuePair) {
+                                var data = keyValuePair.split('=');
+                                var key = data[0];
+                                var value = data[1];
+                                
+                                cmcdData[key] = value;
+                            })
+                            
+                        }
+                        
+                        function log(msg) {
+                            // console.log("msg--",msg);
+                            msg = msg.length > 200 ? msg.substring(0, 200) + '...' : msg; /* to avoid repeated wrapping with large objects */
+                            var tracePanel = document.getElementById('trace');
+                            tracePanel.innerHTML += msg + '\n';
+                            tracePanel.scrollTop = tracePanel.scrollHeight;
+                            // console.log(msg);
+                        }
+                        
+                        function logVideo(msg) {
+                            // console.log("msg video--",msg);
+                            msgCount = msgCount + 1;
+                            // console.log("msgCount-----",msgCount);
+                            msg = msg.length > 200 ? msg.substring(0, 200) + '...' : msg; /* to avoid repeated wrapping with large objects */
+                            var tracePanel = document.getElementById('videotrace');
+                            tracePanel.innerHTML += msg + '   ' ;
+                            tracePanel.scrollTop = tracePanel.scrollHeight;
+                            // console.log(msg);
+                        }
+                        
+                        function logAudio(msg) {
+                            // console.log("msg Audio--",msg);
+                            // msgCount = msgCount + 1;
+                            //    console.log("msgCount-----",msgCount);
+                            msg = msg.length > 200 ? msg.substring(0, 200) + '...' : msg; /* to avoid repeated wrapping with large objects */
+                            var tracePanel = document.getElementById('videotrace');
+                            tracePanel.innerHTML += msg + '   ' ;
+                            tracePanel.scrollTop = tracePanel.scrollHeight;
+                            // console.log(msg);
+                        }
+                        
+                        function eventLogTrace(msg) {
+                            // console.log("msg logStreamInitialized--",msg);
+                            // msgCount = msgCount + 1;
+                            //    console.log("msgCount-----",msgCount);
+                            msg = msg.length > 200 ? msg.substring(0, 200) + '...' : msg; /* to avoid repeated wrapping with large objects */
+                            var tracePanel = document.getElementById('eventLogsTrace');
+                            tracePanel.innerHTML += msg + '   ' ;
+                            tracePanel.scrollTop = tracePanel.scrollHeight;
+                            // console.log(msg);
+                        }
+                        
+                        function doStop() {
+                            setTimeout(() => {
+                                clearInterval(metricsTimer);
+                                console.log('stop');
+                            }, 1);
+                            // stopMetricsInterval();
+                            // init();
+                            
+                            // console.log("player...", player);
+                            // player.attachSource(null);
+                            // player.pause();
+                        }
+                        
+                        
+                    </script>
+                     -->
+                    <!-- <script>
+                        
+                        function getLogs(){
+                            console.log("getLogs called");
+                            
+                            
+                            setInterval(() => {
+                                var divContents = document.getElementById("Video").innerHTML;
+                                var a = window.open('', '', 'height=500, width=500');
+                                a.document.write('<html>');
+                                a.document.write('<body > <h1>Div contents are <br>');
+                                    a.document.write(divContents);
+                                    a.document.write('</body></html>');
+                                    a.document.close();
+                                    a.print();
+                                }, 1000);
+                            }
+                        </script>  -->
+                        
+                        
+                        
+                        <div class="=container">
+                            <!-- bootstrap -->
+                            <div class="container">
+                                <h3 style="text-align: center;font-family: 'Cambria';padding: 10px;">CMCD Player</h3>
+                                
+                                <div class="row-mt-6">
+                                    <div class="col-sm-6">
+                                        <form>
+                                            <label> Select Player: </label>
+                                            
+                                            <select onchange="updateValue(this.value)">select
+                                                <option value="Dash">Dash Js</option>
+                                                <option value="HLS">HLS Player</option>
+                                            </select><br></br>
+                                            <input placeholder="Enter url" style="width:350px" id="userInputUrl" type="text" ></input>
+                                            <br></br>
+                                            <input placeholder="Enter session id" style="width:350px" id="sid" type="text"></input>
+                                            <br></br>
+                                            <input placeholder="Enter content id" style="width:350px" id="cid" type="text"></input>
+                                            
+                                        </form>
+                                        <div class="buttonContainer">
+                                            <button onclick="init()">Load</button>
+                                            <button onclick="doStop()" style="margin-left: 30px">Stop</button>
+                                            
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="parametersDiv">
+                                            <button class="tablink" onclick="openCity('Video', this, 'white')" id="defaultOpen">Video</button>
+                                            <button class="tablink" onclick="openCity('Audio', this, 'white')">Audio</button>
+                                            <div id="Video" class="tabcontent">
+                                                <div>Buffer Length: <span id="videobufferLength"></span></div>
+                                                <div>Bitrate Downloading : <span id="videoBitrate"></span><span> kbps</span></div>
+                                                <div>Index Downloading : <span id="videoPendingIndex"></span><span> / </span><span id="videoPendingMaxIndex"></span></div>
+                                                <div>Index playing : <span id="videoIndex"></span><span> / </span><span id="videoMaxIndex"></span></div>
+                                                <div>Dropped Frames : <span id="videodroppedFrames"></span></div>
+                                                <div>Latency (min|avg|max) : <span id="videolatency"></span></div>
+                                                <div>Download (min|avg|max) : <span id="videodownload"></span></div>
+                                                <div>Ratio (min|avg|max) : <span id="videoratio"></span></div>
+                                            </div>
+                                            
+                                            <div id="Audio" class="tabcontent">
+                                                <div>Buffer Length: <span id="audioBufferLength"></span></div>
+                                                <div>Bitrate Downloading : <span id="audioBitrate"></span><span> kbps</span></div>
+                                                <div>Index Downloading : <span id="audioPendingIndex"></span><span> / </span><span id="audioPendingMaxIndex"></span></div>
+                                                <div>Current Index / Max Index <span id="audioIndex"></span><span> / </span><span id="audioMaxIndex"></span></div>
+                                                <div>Dropped Frames : <span id="audiodroppedFrames"></span></div>
+                                                <div>Latency (min|avg|max) : <span id="audiolatency"></span></div>
+                                                <div>Download (min|avg|max) : <span id="audiodownload"></span></div>
+                                                <div>Ratio (min|avg|max) : <span id="audioratio"></span></div>
+                                                <div>Live Latency : </div>
+                                                <div>Playback Rate : <span id="playbackrate"></span></div>
+                                                
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row-mt-6">
+                                    <div class="col-sm-6">
+                                        <div style="margin-top: 10px">
+                                            <video controls="true"></video>
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <div class="form-floating">
+                                            <textarea class="form-control" placeholder="Sent CMCD data will be displayed here"
+                                            id="trace" style="width: 400px;"></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="form-floating">
+                                            <textarea class="form-control" placeholder="Video metric logs will be displayed here"
+                                            id="videotrace" style="width: 1600px;"></textarea>
+                                        </div>
+                                    </div>
+                                    <!-- <div class="row">
+                                        <div class="form-floating">
+                                            <textarea class="form-control" placeholder="Audio metric logs will be displayed here"
+                                            id="audiotrace" style="width: 1000px;"></textarea>
+                                            <textarea class="form-control" placeholder="Event triggered logs will be displayed here"
+                                            id="streamInitializedTrace" style="width: 1000px;"></textarea>
+                                        </div>
+                                    </div> -->
+                                    <div class="row">
+                                        <div class="form-floating">
+                                            <textarea class="form-control" placeholder="Event triggered logs will be displayed here"
+                                            id="eventLogsTrace" style="width: 1600px;"></textarea>
+                                        </div>
+                                    </div>
+                                    
+                                </div>
+                            </div>  
+                            
+                            <!-- bootstrap -->
+                            <!-- <div>
+                                <form>
+                                    <label> Enter URL: </label>
+                                    <input placeholder="Enter url" style="width:300px" id="userInputUrl" type="text"></input>
+                                    <br></br>
+                                    <label> Enter SID: </label>
+                                    <input placeholder="sid" style="width:300px" id="sid" type="text"></input>
+                                    <br></br>
+                                    <label> Enter CID: </label>
+                                    <input placeholder="cid" style="width:300px" id="cid" type="text"></input>
+                                    <select onchange="updateValue(this.value)">select
+                                        <option value="Dash">Dash Js</option>
+                                        <option value="HLS">HLS Player</option>
+                                    </select>
+                                </form>
+                                <button onclick="init()">Load</button>
+                                <button onclick="doStop()">Stop</button>
+                            </div>
+                            <div style="margin-top: 30px">
+                                <video controls="true"></video>
+                            </div>
+                            <div class="Mydiv">
+                                <div class="form-floating">
+                                    <textarea class="form-control" placeholder="Sent CMCD data will be displayed here"
+                                    id="trace" style="width: 350px"></textarea>
+                                </div>
+                                <div class="parametersDiv">
+                                    <button class="tablink" onclick="openCity('Video', this, 'white')" id="defaultOpen">Video</button>
+                                    <button class="tablink" onclick="openCity('Audio', this, 'white')">Audio</button>
+                                    <div id="Video" class="tabcontent">
+                                        <p >Buffer Length: <span id="videobufferLength"></span></p>
+                                        <p>Bitrate Downloading : <span id="videoBitrate"></span><span> kbps</span></p>
+                                        <p>Index Downloading : <span id="videoPendingIndex"></span><span> / </span><span id="videoPendingMaxIndex"></span></p>
+                                        <p>Index playing : <span id="videoIndex"></span><span> / </span><span id="videoMaxIndex"></span></p>
+                                        <p>Dropped Frames : <span id="videodroppedFrames"></span></p>
+                                        <p>Latency (min|avg|max) : <span id="videolatency"></span></p>
+                                        <p>Download (min|avg|max) : <span id="videodownload"></span></p>
+                                        <p>Ratio (min|avg|max) : <span id="videoratio"></span></p>
+                                    </div>
+                                    
+                                    <div id="Audio" class="tabcontent">
+                                        <p >Buffer Length: <span id="audioBufferLength"></span></p>
+                                        <p>Bitrate Downloading : <span id="audioBitrate"></span><span> kbps</span></p>
+                                        <p>Index Downloading : <span id="audioPendingIndex"></span><span> / </span><span id="audioPendingMaxIndex"></span></p>
+                                        <p>Current Index / Max Index <span id="audioIndex"></span><span> / </span><span id="audioMaxIndex"></span></p>
+                                        <p>Dropped Frames : <span id="audiodroppedFrames"></span></p>
+                                        <p>Latency (min|avg|max) : <span id="audiolatency"></span></p>
+                                        <p>Download (min|avg|max) : <span id="audiodownload"></span></p>
+                                        <p>Ratio (min|avg|max) : <span id="audioratio"></span></p>
+                                        <p>Live Latency : </p>
+                                        <p>Playback Rate : <span id="playbackrate"></span></p>
+                                        
+                                    </div>
+                                </div>
+                            </div>
+                        </div> -->
+                        <!-- TABS SCRIPT -->
+                        <script>
+                            function openCity(cityName,elmnt,color) {
+                                var i, tabcontent, tablinks;
+                                tabcontent = document.getElementsByClassName("tabcontent");
+                                for (i = 0; i < tabcontent.length; i++) {
+                                    tabcontent[i].style.display = "none";
+                                }
+                                tablinks = document.getElementsByClassName("tablink");
+                                for (i = 0; i < tablinks.length; i++) {
+                                    tablinks[i].style.backgroundColor = "";
+                                }
+                                document.getElementById(cityName).style.display = "block";
+                                elmnt.style.backgroundColor = color;
+                                
+                            }
+                            // Get the element with id="defaultOpen" and click on it
+                            document.getElementById("defaultOpen").click();
+                        </script>
+                        
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function () {
+                                init();
+                            });
+                        </script> 
+                    </body>
+                    </html>
