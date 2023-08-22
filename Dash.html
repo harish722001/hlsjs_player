@@ -123,9 +123,10 @@
                       },        
                     },
                     emeEnabled:true,
-                    // xhrSetup: xhr => {
-                    //     xhr.setRequestHeader('nv-authorizations', 'eyJraWQiOiI2NTcyODAiLCJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXIiOiIxLjAiLCJ0eXAiOiJDb250ZW50QXV0aFoiLCJjb250ZW50UmlnaHRzIjpbey')
-                    // }
+                    xhrSetup: xhr => {
+                        xhr.withCredentials = true;
+                        xhr.setRequestHeader('nv-authorizations', 'eyJraWQiOiI2NTcyODAiLCJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXIiOiIxLjAiLCJ0eXAiOiJDb250ZW50QXV0aFoiLCJjb250ZW50UmlnaHRzIjpbey')
+                    }
                 };
                 var video = document.getElementById('hlsvideo');
                 var videoSrc = 'https://tfmstest2.blob.core.windows.net/output/POC/POC_story4/VIKRAM/output16/cmaf_avc_fairplay/index-mid.m3u8';
