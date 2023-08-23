@@ -124,12 +124,19 @@
                       },        
                     },
                     emeEnabled:true,
-                    // licenseXhrSetup: function(xhr, url) {
-                    //     xhr.open("GET", "https://zeefl7g9.anycast.nagra.com/ZEEFL7G9/fpls/contentlicenseservice/v1/certificates");
+                    licenseXhrSetup: function(xhr, url) {
+                        if(xhr){
+                            try{
+                                console.log(xhr, url)
+                            } catch(error) {
+                                console.log(error)
+                            }
+                        }
+                        // xhr.open("GET", "https://zeefl7g9.anycast.nagra.com/ZEEFL7G9/fpls/contentlicenseservice/v1/certificates");
                     //     // xhr.withCredentials = true;
-                    //     xhr.setRequestHeader('nv-authorizations', 'eyJraWQiOiI2NTcyODAiLCJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXIiOiIxLjAiLCJ0eXAiOiJDb250ZW50QXV0aFoiLCJjb250ZW50UmlnaHRzIjpbey');
+                        xhr.setRequestHeader('nv-authorizations', 'eyJraWQiOiI2NTcyODAiLCJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXIiOiIxLjAiLCJ0eXAiOiJDb250ZW50QXV0aFoiLCJjb250ZW50UmlnaHRzIjpbey');
                     //     // xhr.setRequestHeader('Access-Control-Allow-Origin', 'https://harish722001.github.io');
-                    //     xhr.send(null);
+                        // xhr.send(null);
                     // },
                     
                 };
