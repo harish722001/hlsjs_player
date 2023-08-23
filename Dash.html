@@ -131,7 +131,7 @@
                       },        
                     },
                     emeEnabled:true,
-                    xhrSetup: function(xhr, url) {
+                    licenseXhrSetup: function(xhr, url) {
                         console.log('xhrsetup', xhr, url)
                         xhr.open("GET", "https://zeefl7g9.anycast.nagra.com/ZEEFL7G9/fpls/contentlicenseservice/v1/certificates");
                     //    //xhr.withCredentials = true;
