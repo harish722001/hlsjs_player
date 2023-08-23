@@ -124,7 +124,9 @@
                     },
                     emeEnabled:true,
                     xhrSetup: function(xhr, url) {
+                        xhr.open("GET", "https://harish722001.github.io/", true);
                         xhr.withCredentials = true;
+                        xhr.send(null);
                         // xhr.setRequestHeader('nv-authorizations', 'eyJraWQiOiI2NTcyODAiLCJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXIiOiIxLjAiLCJ0eXAiOiJDb250ZW50QXV0aFoiLCJjb250ZW50UmlnaHRzIjpbey')
                         // xhr.setRequestHeader('Access-Control-Allow-Origin', '*')
                     },
