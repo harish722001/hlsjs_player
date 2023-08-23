@@ -131,14 +131,42 @@
                       },        
                     },
                     emeEnabled:true,
-                    licenseXhrSetup: function(xhr, url) {
-                        console.log('xhrsetup', xhr, url)
-                        xhr.open("GET", url);
-                    //    //xhr.withCredentials = true;
-                        xhr.setRequestHeader('nv-authorizations', 'Bearer eyJraWQiOiI2NTcyODAiLCJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXIiOiIxLjAiLCJ0eXAiOiJDb250ZW50QXV0aFoiLCJjb250ZW50UmlnaHRzIjpbey');
-                    //    // xhr.setRequestHeader('Access-Control-Allow-Origin', 'https://harish722001.github.io');
-                    //    xhr.send(null);
-                    },
+                    // licenseXhrSetup: function(xhr, url) {
+                    //     console.log('xhrsetup', xhr, url)
+                    //     xhr.open("GET", url);
+                    // //    //xhr.withCredentials = true;
+                    //     xhr.setRequestHeader('nv-authorizations', 'Bearer eyJraWQiOiI2NTcyODAiLCJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ2ZXIiOiIxLjAiLCJ0eXAiOiJDb250ZW50QXV0aFoiLCJjb250ZW50UmlnaHRzIjpbey');
+                    // //    // xhr.setRequestHeader('Access-Control-Allow-Origin', 'https://harish722001.github.io');
+                    // //    xhr.send(null);
+                    // },
+
+                    licenseXhrSetup: function (xhr, url, keyContext, licenseChallenge) {
+    let payload = licenseChallenge;
+
+    // Send cookies with request
+    xhr.withCredentials = true;
+
+    // Call open to change the method (default is POST), modify the url, or set request headers
+    xhr.open('POST', url, true);
+
+    // call xhr.setRequestHeader after xhr.open otherwise licenseXhrSetup will throw and be called a second time after HLS.js call xhr.open
+    if (keyContext.keySystem === 'com.apple.fps') {
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      payload = JSON.stringify({
+        keyData: base64Encode(keyContext.decryptdata?.keyId),
+        licenseChallenge: base64Encode(licenseChallenge),
+      });
+    } else {
+      xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+    }
+
+    // Return the desired payload or a Promise<Uint8Array>.
+    // Not returning a value, or returning `undefined` or` Promise<void>` will result in the `licenseChallenge` being used.
+    return fetchDRMToken(this.authData).then((result) => {
+      xhr.setRequestHeader('token', token);
+      return payload;
+    });
+  }
                      
                 };
                 var video = document.getElementById('hlsvideo');
