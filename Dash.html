@@ -117,6 +117,13 @@
                     contentId:"74gfrbjiojkn",
                     useHeaders:true,
                     debug: true,
+                    requestMediaKeySystemAccessFunc: (keySystem, supportedConfigurations) => {
+                        console.log('keysystem',keySystem, supportedConfigurations)
+                        if (keySystem === 'com.apple.fps') {
+                          keySystem = 'com.apple.fps';
+                        }
+                        return navigator.requestMediaKeySystemAccess(keySystem, supportedConfigurations);
+                    },
                     drmSystems: {
                       'com.apple.fps.1_0': {
                             licenseUrl: 'https://zeefl7g9.anycast.nagra.com/ZEEFL7G9/fpls/contentlicenseservice/v1/licenses',
